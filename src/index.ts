@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const hostname = process.env.HOST || 'localhost';
-const port = parseInt(process.env.PORT) || 3000;
+const port = parseInt(process.env.PORT) || 4000;
 
 const validate = (str) => {
   const re = /^[0-9A-Fa-f]{64}$/;
@@ -14,8 +14,9 @@ const validate = (str) => {
 };
 
 const server = http.createServer((req, res) => {
-  // global content type
+  // set headers
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   const queryObject = url.parse(req.url, true).query;
 
