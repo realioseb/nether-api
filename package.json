@@ -11,6 +11,7 @@
     "start:dev": "nodemon src/index.ts"
   },
   "dependencies": {
+    "dotenv": "^16.0.1",
     "keccak": "^3.0.2"
   },
   "devDependencies": {

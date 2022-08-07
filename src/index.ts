@@ -1,9 +1,12 @@
 import http from 'http';
 import url from 'url';
 import createKeccakHash from 'keccak';
+import dotenv from 'dotenv';
 
-const hostname = 'localhost';
-const port = 3000;
+dotenv.config();
+
+const hostname = process.env.HOST || 'localhost';
+const port = parseInt(process.env.PORT) || 3000;
 
 const validate = (str) => {
   const re = /^[0-9A-Fa-f]{64}$/;
@@ -23,7 +26,7 @@ const server = http.createServer((req, res) => {
     !validate(queryObject.hex)
   ) {
     res.statusCode = 400;
-    res.end(JSON.stringify({ error: 'invalid-hex' }));
+    res.end(JSON.stringify({ error: 'invalid hex' }));
     return;
   }
 
@@ -32,8 +35,8 @@ const server = http.createServer((req, res) => {
   let hash: string;
 
   for (let i = 0; i <= Number.MAX_SAFE_INTEGER; i++) {
-    const int = BigInt(i);
-    const sum = input + int;
+    const sum = input + BigInt(i);
+
     const hexVal = createKeccakHash('keccak256')
       .update(sum.toString(16), 'hex')
       .digest('hex');
@@ -43,6 +46,12 @@ const server = http.createServer((req, res) => {
       hash = hexVal;
       break;
     }
+  }
+
+  if (!hash) {
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: "lower hash wasn't found" }));
+    return;
   }
 
   res.statusCode = 200;
