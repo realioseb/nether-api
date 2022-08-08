@@ -1,17 +1,12 @@
 import http from 'http';
 import url from 'url';
-import createKeccakHash from 'keccak';
 import dotenv from 'dotenv';
+import { findLowerKeccak, validate } from './utils';
 
 dotenv.config();
 
 const hostname = process.env.HOST || 'localhost';
 const port = parseInt(process.env.PORT) || 4000;
-
-const validate = (str) => {
-  const re = /^[0-9A-Fa-f]{64}$/;
-  return re.test(str);
-};
 
 const server = http.createServer((req, res) => {
   // set headers
@@ -23,35 +18,19 @@ const server = http.createServer((req, res) => {
   // validate
   if (
     typeof queryObject !== 'object' ||
-    !queryObject.hex ||
+    typeof queryObject.hex !== 'string' ||
     !validate(queryObject.hex)
   ) {
     res.statusCode = 400;
-    res.end(JSON.stringify({ error: 'invalid hex' }));
+    res.end(JSON.stringify({ error: 'Invalid hex' }));
     return;
   }
 
-  const input = BigInt(`0x${queryObject.hex}`);
-  let nounce: number;
-  let hash: string;
-
-  for (let i = 0; i <= Number.MAX_SAFE_INTEGER; i++) {
-    const sum = input + BigInt(i);
-
-    const hexVal = createKeccakHash('keccak256')
-      .update(sum.toString(16), 'hex')
-      .digest('hex');
-
-    if (hexVal < queryObject.hex) {
-      nounce = i;
-      hash = hexVal;
-      break;
-    }
-  }
+  const [nounce, hash] = findLowerKeccak(queryObject.hex);
 
   if (!hash) {
     res.statusCode = 404;
-    res.end(JSON.stringify({ error: "lower hash wasn't found" }));
+    res.end(JSON.stringify({ error: 'Unable to find a lower hash' }));
     return;
   }
 
