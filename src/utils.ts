@@ -15,14 +15,29 @@ export const findLowerKeccak = (hex: string): [string, string] => {
     // try til memory's enough
     while (true) {
       nounce += 1n;
+
+      // sum
       const sum = input + nounce;
 
-      const hexVal = createKeccakHash('keccak256')
+      const hexSum = createKeccakHash('keccak256')
         .update(sum.toString(16), 'hex')
         .digest('hex');
 
-      if (hexVal < hex) {
-        hash = hexVal;
+      if (hexSum < hex) {
+        hash = hexSum;
+        break;
+      }
+
+      // subtract
+      const subt = input - nounce;
+
+      const hexSubt = createKeccakHash('keccak256')
+        .update(subt.toString(16), 'hex')
+        .digest('hex');
+
+      if (hexSubt < hex) {
+        hash = hexSubt;
+        nounce = -nounce;
         break;
       }
     }
